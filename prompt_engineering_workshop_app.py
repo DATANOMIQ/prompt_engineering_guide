@@ -113,9 +113,9 @@ class StreamlitPromptEngineering:
 
         col1, col2 = st.columns(2)
         with col1:
-            st.text_area("PROMPT", prompt, height=200)
+            st.text_area("PROMPT", prompt, height=400)
         with col2:
-            st.text_area("RESPONSE", response, height=200)
+            st.text_area("RESPONSE", response, height=400)
         st.divider()
 
 
@@ -146,6 +146,7 @@ def main():
     }
     .stTextArea textarea {
         font-size: 20px !important;
+        min-height: 400px !important;
     }
     .stButton button {
         font-size: 22px !important;
@@ -253,6 +254,26 @@ def main():
     st.sidebar.markdown(f"**Provider**: {provider}")
     st.sidebar.markdown(f"**Model**: {model_display}")
     st.sidebar.markdown(f"**Temperature**: {st.session_state.temperature}")
+
+    # add Sources
+    st.sidebar.divider()
+    # add Sources section
+    st.sidebar.subheader("Sources")
+    st.sidebar.markdown(
+        """
+        - [Prompt Engineering Paper](https://github.com/thunlp/PromptPapers#papers)
+        - [Survey Paper](https://arxiv.org/abs/2402.07927)
+        """
+    )
+
+    st.sidebar.divider()
+    # copyright
+    st.sidebar.markdown(
+        """
+        &copy; 2025 Alexander Lammers (DATANOMIQ GmbH)
+        \nAll rights reserved.
+        """
+    )
 
     # Display content based on selected section
     if section == "Introduction":
@@ -491,8 +512,37 @@ def main():
 
         with st.expander("About Basic Prompting", expanded=True):
             st.write("""
+            ### Basic Prompting
+            
             Basic prompting involves providing a simple text input to the AI and allowing it to complete or respond to that text.
             These prompts have minimal structure and rely on the model's pretrained capabilities.
+            
+            #### Key characteristics:
+            - **Simple structure**: Uses natural language without specialized formatting
+            - **Open-ended**: Often allows the model to determine the appropriate response format
+            - **Leverages pretrained knowledge**: Relies on the model's existing training rather than explicit instructions
+            
+            #### Common use cases:
+            - Text completion exercises
+            - Simple question answering
+            - Generating creative content
+            - Exploratory interactions to test model capabilities
+            
+            #### Strengths:
+            - Quick and easy to implement
+            - Works well for straightforward tasks
+            - Requires minimal prompt engineering effort
+            
+            #### Limitations:
+            - Less control over response format and content
+            - May produce inconsistent or unpredictable outputs
+            - Not ideal for complex or structured tasks
+            
+            #### Tips for effective basic prompts:
+            - Be clear and concise
+            - Avoid ambiguous phrasing
+            - Use proper spelling and grammar
+            - Start with clear context if needed
             """)
 
         st.subheader("Try it yourself:")
@@ -514,8 +564,42 @@ def main():
 
         with st.expander("About Instruction Prompting", expanded=True):
             st.write("""
+            ### Instruction-based Prompting
+            
             Instruction-based prompting involves giving the AI explicit directions about what you want it to do.
             This approach provides more control over the format and content of the response.
+            
+            #### Key characteristics:
+            - **Explicit directions**: Clear instructions on task, format, and expected output
+            - **Task-oriented**: Focuses on specific actions for the model to perform
+            - **Structured approach**: Often includes formatting guidelines or output constraints
+            
+            #### Common use cases:
+            - Data transformation tasks
+            - Content classification
+            - Structured information extraction
+            - Format conversion (e.g., text to JSON)
+            - Specific analytical tasks
+            
+            #### Best practices:
+            - **Be specific**: Clearly state what you want the model to do
+            - **Define scope**: Set boundaries for the response
+            - **Format instructions**: Specify how the answer should be structured
+            - **Use action verbs**: Start with "Classify," "Summarize," "List," etc.
+            - **Provide examples**: Show the expected output format when needed
+            
+            #### Advanced techniques:
+            - **Multi-step instructions**: Break down complex tasks into sequential steps
+            - **Conditional instructions**: "If X applies, do Y; otherwise, do Z"
+            - **Reference documents**: "Based on the text below, answer the following questions..."
+            
+            #### Example structure:
+            ```
+            Task: [Clear description of what to do]
+            Input: [Content to analyze/transform]
+            Format: [Instructions about how to structure the output]
+            Additional constraints: [Any other requirements]
+            ```
             """)
 
         st.subheader("Try it yourself:")
@@ -555,9 +639,59 @@ def main():
 
         with st.expander("About Shot-based Prompting", expanded=True):
             st.write("""
-            - **Zero-shot**: No examples provided, asking the model to perform a task directly
-            - **One-shot**: One example provided before asking the model to perform a similar task
-            - **Few-shot**: Multiple examples provided to establish a pattern
+            ### Shot-based Prompting Techniques
+            
+            Shot-based prompting refers to providing a varying number of examples before asking the model to perform a task.
+            
+            #### Zero-shot learning
+            No examples are provided; the model must perform a task based solely on instructions.
+            
+            - **Characteristics**: Relies entirely on pretrained knowledge
+            - **Best for**: Simple tasks within the model's training domain
+            - **Example**: "Classify this movie review as positive or negative: [review]"
+            - **Limitations**: Less reliable for complex, ambiguous, or domain-specific tasks
+            
+            #### One-shot learning
+            One example is provided before asking the model to perform a similar task.
+            
+            - **Characteristics**: Uses a single demonstration to establish the pattern
+            - **Best for**: When you need to clarify task format but have limited context space
+            - **Example**: 
+            ```
+            Input: "I loved this movie!" 
+            Classification: Positive
+            
+            Input: "Worst experience ever."
+            Classification:
+            ```
+            - **Benefits**: Significantly improves performance over zero-shot for many tasks
+            
+            #### Few-shot learning
+            Multiple examples are provided to establish a clear pattern.
+            
+            - **Characteristics**: Uses 2+ examples to demonstrate the desired behavior
+            - **Best for**: Complex tasks, unusual formats, or domain-specific knowledge
+            - **Example**:
+            ```
+            Input: "Great product, fast shipping."
+            Sentiment: Positive
+            Category: Customer Service
+            
+            Input: "Item arrived damaged and customer service was unhelpful."
+            Sentiment: Negative
+            Category: Product Quality, Customer Service
+            
+            Input: "The price was reasonable but delivery took longer than expected."
+            Sentiment:
+            Category:
+            ```
+            - **Benefits**: Most reliable approach for consistent, formatted responses
+            
+            #### Implementation strategies:
+            - **Diverse examples**: Include edge cases and various formats
+            - **Ordered complexity**: Arrange examples from simple to complex
+            - **Balance**: For classification tasks, include examples from all classes
+            - **Format consistency**: Maintain the same structure across examples
             """)
 
         st.subheader("Sentiment Classification Example")
@@ -597,9 +731,57 @@ def main():
 
         with st.expander("About Chain-of-Thought Reasoning", expanded=True):
             st.write("""
+            ### Chain-of-Thought (CoT) Reasoning
+            
             Chain-of-thought (CoT) prompting encourages the model to generate a series of intermediate reasoning steps 
             that lead to a final answer. This technique significantly improves performance on complex tasks that require 
             multi-step reasoning, such as math word problems, logical reasoning, and complex analyses.
+            
+            #### Key principles:
+            - **Externalized reasoning**: Makes the model's thinking process visible
+            - **Step-by-step approach**: Breaks complex problems into manageable parts
+            - **Reduced error rates**: Helps prevent logical mistakes and oversights
+            - **Self-verification**: Allows the model to check its work during the process
+            
+            #### Implementation methods:
+            
+            1. **Prompt-based CoT**
+            - Add phrases like "Let's think about this step-by-step" or "Let's solve this systematically"
+            - Example: "Problem: [problem description]. Let's solve this step-by-step:"
+            
+            2. **Few-shot CoT**
+            - Provide examples of step-by-step reasoning for similar problems
+            - Demonstrate the reasoning process you want the model to follow
+            
+            3. **Generated CoT**
+            - First ask the model to generate reasoning steps
+            - Then ask it to use those steps to provide a final answer
+            
+            #### Research findings:
+            - CoT improves performance on mathematical problems by 20-40% on standard benchmarks
+            - Particularly effective for problems requiring multi-step logical reasoning
+            - Works best with more capable models (e.g., GPT-4, Claude, etc.)
+            - Can be combined with techniques like Self-Consistency for even better results
+            
+            #### Best practices:
+            - Explicitly request intermediate reasoning steps
+            - Break down complex problems into clear stages
+            - For math problems, encourage calculation details
+            - For logical reasoning, promote consideration of different cases
+            - Allow sufficient token space for detailed reasoning
+            - Instruct the model to verify its calculations when appropriate
+            
+            #### Example structure:
+            ```
+            Problem: [Complex problem]
+            Let's solve this step-by-step:
+            Step 1: [Understanding the problem]
+            Step 2: [Identifying relevant information]
+            Step 3: [Applying relevant formulas/concepts]
+            Step 4: [Performing calculations/reasoning]
+            Step 5: [Verifying the solution]
+            Final answer: [Conclusion]
+            ```
             """)
 
         st.subheader("Try it yourself:")
@@ -649,14 +831,47 @@ def main():
 
         with st.expander("About Self-Consistency", expanded=True):
             st.write("""
+            ### Self-Consistency Techniques
+            
             Self-consistency involves generating multiple independent solutions to a problem and then selecting 
             the most consistent answer. This technique increases reliability for complex reasoning tasks by 
             mitigating the effects of randomness in the model's responses.
             
-            The technique works by:
-            1. Solving the same problem multiple times with different sampling temperatures
-            2. Extracting the final answer from each solution
-            3. Taking the most frequent answer as the final result
+            #### How it works:
+            1. **Multiple generations**: Solve the same problem multiple times with different sampling temperatures
+            2. **Path diversity**: Each solution may take a different reasoning approach
+            3. **Answer extraction**: Extract the final answer from each solution path
+            4. **Majority voting**: Take the most frequent answer as the final result
+            
+            #### Technical implementation:
+            - Generate N different responses (typically 5-20) using chain-of-thought prompting
+            - Vary temperature/sampling parameters across generations to encourage diversity
+            - Parse the final answers programmatically
+            - Apply a consensus mechanism (typically majority voting)
+            
+            #### When to use self-consistency:
+            - Complex mathematical or logical problems
+            - Tasks where accuracy is critical
+            - Problems with potential for different valid solution methods
+            - When resources allow for multiple API calls
+            - For high-stakes applications requiring confidence in results
+            
+            #### Research findings:
+            - Improves accuracy on GSM8K math problems by 10-15% over standard CoT
+            - Reduces variance in model performance
+            - Particularly effective when combined with chain-of-thought reasoning
+            - More effective with larger, more capable models
+            
+            #### Limitations:
+            - Higher computational cost and API usage
+            - May reach incorrect consensus if the model has systematic biases
+            - Requires parsing/extraction of answers from free-text responses
+            - Not always suitable for open-ended or creative tasks
+            
+            #### Advanced variations:
+            - **Weighted voting**: Consider confidence scores for each solution path
+            - **Reasoning verification**: Cross-check intermediate reasoning steps
+            - **Iterative refinement**: Use consensus answers as starting points for deeper analysis
             """)
 
         st.subheader("Try Self-Consistency:")
@@ -728,14 +943,60 @@ def main():
 
         with st.expander("About Tree of Thoughts", expanded=True):
             st.write("""
+            ### Tree of Thoughts (ToT)
+            
             The Tree of Thoughts technique extends chain-of-thought prompting by exploring multiple reasoning paths 
             in parallel. It creates a tree structure where each node represents a thought, and branches represent different 
             approaches to solving a problem.
             
-            This method is particularly useful for:
-            - Complex, creative problems with multiple viable solutions
-            - Problems requiring exploration of different perspectives
-            - Situations where the first approach might not yield optimal results
+            #### Key concepts:
+            
+            - **Thought as state**: Each reasoning step is a "state" in the search space
+            - **Branching**: Multiple possible next steps from each thought
+            - **Deliberate exploration**: Systematically consider alternative approaches
+            - **Evaluation**: Assess the promise of different reasoning paths
+            - **Backtracking**: Ability to abandon unproductive paths and try alternatives
+            
+            #### Structure of Tree of Thoughts:
+            1. **Root**: Problem statement
+            2. **First-level branches**: Different initial approaches
+            3. **Internal nodes**: Intermediate reasoning steps
+            4. **Leaf nodes**: Potential solutions
+            
+            #### Implementation methods:
+            
+            1. **Breadth-first search (BFS)**
+            - Generate multiple approaches/starting points
+            - Explore each approach to a fixed depth
+            - Evaluate all paths and select the most promising one(s)
+            - Continue exploration from selected path(s)
+            
+            2. **Depth-first search (DFS)**
+            - Explore a single path deeply 
+            - Evaluate whether to continue or backtrack
+            - If backtracking, try alternative branches
+            
+            3. **Beam search**
+            - Generate k different thoughts at each step
+            - Keep only the top-k most promising paths
+            - Balance exploration breadth with computational efficiency
+            
+            #### Ideal applications:
+            - Complex planning problems
+            - Creative tasks with multiple viable solutions
+            - Game playing and strategic decision making
+            - Multi-step reasoning where initial intuitions may be misleading
+            
+            #### Technical considerations:
+            - Requires careful prompt engineering to structure the tree exploration
+            - Needs evaluation strategies to determine which paths to pursue
+            - Can be implemented with self-evaluation (model judges its own thoughts)
+            - Often requires breaking token limits through multiple API calls
+            
+            #### Advanced implementations:
+            - **Human-in-the-loop ToT**: Human selects which branches to explore
+            - **Automated ToT**: Model generates, evaluates, and selects paths autonomously
+            - **Hybrid approaches**: Automated exploration with human guidance at key decision points
             """)
 
         st.subheader("Try Tree of Thoughts:")
@@ -857,14 +1118,65 @@ def main():
 
         with st.expander("About ReAct", expanded=True):
             st.write("""
+            ### ReAct Framework (Reasoning + Acting)
+            
             ReAct (Reasoning + Acting) is a framework that combines chain-of-thought reasoning with the 
             ability to interact with external tools. This allows models to break down complex problems,
             use tools when needed, and integrate information from those tools into their reasoning process.
             
-            This approach is especially useful for tasks that require:
-            - Gathering information not available in the model's knowledge
-            - Performing calculations or specialized operations
-            - Multi-step plans where each step may depend on external data
+            #### Core components:
+            
+            1. **Reasoning**: Internal deliberation about what to do next
+            - Similar to chain-of-thought
+            - Breaks down complex problems
+            - Decides when tool use is necessary
+            
+            2. **Acting**: Taking actions through tool use
+            - Calls to external APIs and tools
+            - Information retrieval
+            - Calculations and data processing
+            - Environment interaction
+            
+            3. **Observation**: Processing results from actions
+            - Interpreting tool outputs
+            - Incorporating new information into reasoning
+            - Deciding next steps based on observations
+            
+            #### ReAct pattern:
+            ```
+            Thought: [Internal reasoning about the problem]
+            Action: [Tool name][Tool input]
+            Observation: [Result from tool]
+            Thought: [Reasoning incorporating the observation]
+            ... (repeat as needed)
+            Final Answer: [Solution based on the reasoning and acting process]
+            ```
+            
+            #### Common tools integrated with ReAct:
+            - **Search engines**: For retrieving factual information
+            - **Calculators**: For mathematical operations
+            - **Code interpreters**: For executing code and processing data
+            - **API calls**: Weather, stocks, sports scores, etc.
+            - **Database queries**: For retrieving structured information
+            - **Document retrieval**: For accessing relevant documents
+            
+            #### Benefits:
+            - **Factual accuracy**: Reduces hallucination by grounding in external data
+            - **Up-to-date information**: Overcomes knowledge cutoff limitations
+            - **Computational accuracy**: Delegates calculations to specialized tools
+            - **Complex task solving**: Enables multi-step tasks requiring diverse capabilities
+            
+            #### Implementation considerations:
+            - Requires clear formatting conventions for tool calls
+            - Needs robust error handling for tool failures
+            - Benefits from clear schemas for each tool's capabilities
+            - Often implemented with specialized agents frameworks (LangChain, AutoGPT, etc.)
+            
+            #### Recent developments:
+            - Integration with function calling in LLM APIs
+            - Tool verification mechanisms to ensure proper tool use
+            - Multi-agent systems where different ReAct agents collaborate
+            - Specialized agents for particular domains or tool sets
             """)
 
         st.subheader("Try ReAct Framework:")
