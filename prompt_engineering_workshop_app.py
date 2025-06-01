@@ -3,15 +3,23 @@ import os
 from dotenv import load_dotenv
 import sys
 import openai
+import anthropic
 
 # Add project root to path for module imports
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-# No unused imports
-
 # Load environment variables
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
+anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
+anthropic_client = None
+
+# Initialize Anthropic client if API key is available
+if anthropic_api_key:
+    try:
+        anthropic_client = anthropic.Anthropic(api_key=anthropic_api_key)
+    except Exception as e:
+        print(f"Error initializing Anthropic client: {str(e)}")
 
 
 class StreamlitPromptEngineering:
@@ -21,6 +29,8 @@ class StreamlitPromptEngineering:
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
+        # Determine model provider (OpenAI or Anthropic)
+        self.provider = "openai" if "gpt" in model else "anthropic"
 
     def set_parameters(
         self,
@@ -40,27 +50,60 @@ class StreamlitPromptEngineering:
             "frequency_penalty": frequency_penalty,
             "presence_penalty": presence_penalty,
         }
+        # Update provider if model changed
+        if model and model != self.model:
+            self.provider = "openai" if "gpt" in model else "anthropic"
         return params
 
     def get_completion(self, messages, **kwargs):
         """Get completion with Streamlit progress indicator"""
         params = self.set_parameters(**kwargs)
+        provider = "anthropic" if "claude" in params["model"] else "openai"
 
-        if not openai.api_key:
-            return f"[Example response for: {messages[-1]['content'][:50]}...]"
+        # Validate required API keys
+        if provider == "openai" and not openai.api_key:
+            return f"[OpenAI API key not set. Example response for: {messages[-1]['content'][:50]}...]"
+        if provider == "anthropic" and not anthropic_client:
+            return f"[Anthropic API key not set. Example response for: {messages[-1]['content'][:50]}...]"
 
         try:
             with st.spinner("Getting AI response..."):
-                response = openai.chat.completions.create(
-                    model=params["model"],
-                    messages=messages,
-                    temperature=params["temperature"],
-                    max_tokens=params["max_tokens"],
-                    top_p=params["top_p"],
-                    frequency_penalty=params["frequency_penalty"],
-                    presence_penalty=params["presence_penalty"],
-                )
-            return response.choices[0].message.content
+                if provider == "openai":
+                    # Use OpenAI API
+                    response = openai.chat.completions.create(
+                        model=params["model"],
+                        messages=messages,
+                        temperature=params["temperature"],
+                        max_tokens=params["max_tokens"],
+                        top_p=params["top_p"],
+                        frequency_penalty=params["frequency_penalty"],
+                        presence_penalty=params["presence_penalty"],
+                    )
+                    return response.choices[0].message.content
+                else:
+                    # Use Anthropic API
+                    system_message = ""
+                    user_messages = []
+
+                    # Convert ChatML format to Anthropic format
+                    for msg in messages:
+                        if msg["role"] == "system":
+                            system_message = msg["content"]
+                        else:
+                            user_messages.append(msg["content"])
+
+                    # Join user messages if multiple (simplification for demo)
+                    user_content = "\n".join(user_messages) if user_messages else ""
+
+                    response = anthropic_client.messages.create(
+                        model=params["model"],
+                        max_tokens=params["max_tokens"],
+                        temperature=params["temperature"],
+                        top_p=params["top_p"],
+                        system=system_message,
+                        messages=[{"role": "user", "content": user_content}],
+                    )
+                    return response.content[0].text
         except Exception as e:
             return f"Error: {str(e)}"
 
@@ -85,11 +128,103 @@ def main():
         initial_sidebar_state="expanded",
     )
 
-    st.title("🚀 Prompt Engineering Workshop")
-    st.subheader("Interactive Guide to Mastering Prompt Engineering")
+    # Add custom CSS to increase font size and sidebar width
+    st.markdown(
+        """
+    <style>
+    html, body, [class*="css"] {
+        font-size: 22px;
+    }
+    h1 {
+        font-size: 2.5rem !important;
+    }
+    h2 {
+        font-size: 2rem !important;
+    }
+    h3 {
+        font-size: 1.5rem !important;
+    }
+    .stTextArea textarea {
+        font-size: 20px !important;
+    }
+    .stButton button {
+        font-size: 22px !important;
+    }
+    .stRadio label {
+        font-size: 22px !important;
+    }
+    .stSelectbox label {
+        font-size: 22px !important;
+    }
+    .sidebar .sidebar-content {
+        font-size: 22px !important;
+    }
+    /* Make sliders wider */
+    .stSlider {
+        width: 100% !important;
+    }
+    .stSlider > div > div {
+        width: 100% !important;
+    }
+    /* Make sidebar wider */
+    [data-testid="stSidebar"] {
+        min-width: 400px !important;
+        max-width: 400px !important;
+    }
+    /* Make sidebar collapsible */
+    [data-testid="stSidebar"][aria-expanded="false"] {
+        margin-left: -400px !important;
+    }
+    /* Ensure main content adjusts accordingly */
+    .main .block-container {
+        max-width: calc(100% - 450px) !important;
+        padding-left: 7rem !important;
+    }
+    </style>
+    """,
+        unsafe_allow_html=True,
+    )
+
+    # Create a layout with columns for the title and logo
+    col1, col2 = st.columns([3, 1])
+
+    with col1:
+        st.title("Prompt Engineering Workshop")
+        st.subheader("@AI Convention 2025 (IHK Schwaben)")
+
+    with col2:
+        # Display the IHK Schwaben logo flush right
+        try:
+            # Apply CSS for right alignment
+            st.markdown(
+                """
+                <style>
+                [data-testid="column"] > div:has(img) {
+                    display: flex;
+                    justify-content: flex-end;
+                }
+                </style>
+                """,
+                unsafe_allow_html=True,
+            )
+            st.image("DATANOMIQ.png", width=300)
+        except Exception as e:
+            st.error(f"Could not load logo: {e}")
 
     # Initialize frontend prompt engineering instance
     pe_demo = StreamlitPromptEngineering()
+
+    # Initialize session state to store settings
+    if "temperature" not in st.session_state:
+        st.session_state.temperature = 0.7
+    if "top_p" not in st.session_state:
+        st.session_state.top_p = 1.0
+    if "max_tokens" not in st.session_state:
+        st.session_state.max_tokens = 256
+    if "model" not in st.session_state:
+        st.session_state.model = "gpt-3.5-turbo"
+    if "provider" not in st.session_state:
+        st.session_state.provider = "openai"
 
     # Sidebar for navigation
     st.sidebar.title("Workshop Sections")
@@ -97,6 +232,7 @@ def main():
         "Choose a section:",
         [
             "Introduction",
+            "Settings",  # New settings section
             "1. Basic Prompting",
             "2. Instruction-based Prompting",
             "3. Zero/One/Few-Shot Prompting",
@@ -108,31 +244,243 @@ def main():
         ],
     )
 
-    # API Key input in sidebar
-    with st.sidebar.expander("OpenAI API Configuration"):
-        api_key = st.text_input("OpenAI API Key", type="password")
-        if api_key:
-            os.environ["OPENAI_API_KEY"] = api_key
-            openai.api_key = api_key
+    # Add model indicator to the sidebar
+    st.sidebar.divider()
+    st.sidebar.subheader("Current Model")
+    model_name = st.session_state.model
+    provider = "OpenAI" if "gpt" in model_name else "Anthropic"
+    model_display = model_name.replace("-", " ").title().replace("Gpt", "GPT")
+    st.sidebar.markdown(f"**Provider**: {provider}")
+    st.sidebar.markdown(f"**Model**: {model_display}")
+    st.sidebar.markdown(f"**Temperature**: {st.session_state.temperature}")
 
     # Display content based on selected section
     if section == "Introduction":
         st.write("""
-        ## Welcome to the Prompt Engineering Workshop! 
-        
-        This interactive workshop will guide you through various techniques for effectively communicating with AI models.
+        ## Introduction
+        Welcome to the Prompt Engineering Workshop! This workshop will help you learn effective techniques for working with AI language models.
         
         ### What is Prompt Engineering?
         
-        Prompt engineering is the process of designing and optimizing inputs (prompts) to AI language models to get the most useful, relevant, and accurate outputs.
+        Prompt engineering is the practice of crafting effective inputs (prompts) for AI models to get desired outputs.
+        Good prompts can significantly improve the quality, accuracy, and relevance of AI responses.
         
-        ### How to use this workshop:
+        ### Techniques Overview
         
-        1. Select a section from the sidebar to explore different prompt engineering techniques
-        2. Experiment with the interactive examples
-        3. Try modifying the prompts to see how small changes affect the output
+        **1. Basic Prompting**
+        Simple text inputs that rely on the model's pretrained capabilities with minimal structure.
         
-        Let's get started!
+        **2. Instruction-based Prompting**
+        Explicit directions about what you want the AI to do, providing more control over format and content.
+        
+        **3. Zero/One/Few-Shot Prompting**
+        - Zero-shot: No examples provided
+        - One-shot: One example provided before asking for a similar task
+        - Few-shot: Multiple examples to establish a pattern
+        
+        **4. Chain-of-Thought Reasoning**
+        Guiding the model to break down complex problems into logical steps, improving performance on multi-step reasoning.
+        
+        **5. Self-Consistency Techniques**
+        Generating multiple independent solutions and finding consensus to increase reliability.
+        
+        **6. Tree of Thoughts**
+        Exploring multiple reasoning paths in parallel to approach complex problems from different angles.
+        
+        **7. ReAct Framework**
+        Combining reasoning with actions to solve problems by interacting with external tools.
+        
+        **8. Real-world Applications**
+        Practical examples combining multiple techniques for effective solutions to complex problems.
+        """)
+
+    elif section == "Settings":
+        st.write("## Model Configuration Settings")
+        st.write("""
+        Configure how the AI model generates responses by adjusting these parameters.
+        Changes made here will affect all examples throughout the workshop.
+        """)
+
+        with st.expander("Understanding Model Parameters", expanded=True):
+            st.write("""
+            ### Temperature
+            
+            **Temperature** controls the randomness of the model's output. Higher values (closer to 1.0) make the 
+            output more random and creative, while lower values (closer to 0.0) make it more focused and deterministic.
+            
+            - **Low temperature (0.1-0.3)**: Good for factual responses, classification tasks, or when you need 
+              consistent, predictable outputs.
+            - **Medium temperature (0.4-0.7)**: Balanced between creativity and coherence, suitable for most general-purpose tasks.
+            - **High temperature (0.8-1.0)**: Produces more diverse and creative responses, good for brainstorming, 
+              creative writing, or generating multiple alternatives.
+            
+            ### Top P (Nucleus Sampling)
+            
+            **Top P** determines how the model selects words when generating text. It filters the output by keeping only 
+            the tokens whose cumulative probability exceeds the Top P value.
+            
+            - Lower values (e.g., 0.5) restrict the model to higher-probability words, making output more conservative
+            - Higher values (e.g., 0.95) allow more diversity in word choice
+            - Setting Top P = 1.0 means no filtering is applied
+            
+            ### Maximum Tokens
+            
+            **Maximum tokens** limits how long the model's response can be. One token is roughly 4 characters or 3/4 of a word.
+            
+            Setting this properly helps to:
+            - Prevent overly lengthy responses
+            - Reduce API costs for production applications
+            - Control response time
+            
+            For this workshop, we recommend values between 200-1000 tokens.
+            
+            ### Model Selection
+            
+            You can choose from different AI models:
+            
+            **OpenAI Models**:
+            - **GPT-3.5 Turbo**: Balances capability and speed, suitable for most general tasks.
+            - **GPT-4**: Higher capability especially for complex reasoning, coding, and creative tasks.
+            
+            **Anthropic Models**:
+            - **Claude 3 Sonnet**: Balanced performance, suitable for most tasks.
+            - **Claude 3 Haiku**: Faster and more cost-effective for simpler tasks.
+            - **Claude 3 Opus**: Maximum capability for the most complex tasks.
+            
+            Each model has different strengths, weaknesses, and pricing. Try different models for the same prompt to see how they compare!
+            """)
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            # Temperature slider
+            temp = st.slider(
+                "Temperature:",
+                min_value=0.0,
+                max_value=1.0,
+                value=st.session_state.temperature,
+                step=0.05,
+                help="Controls randomness: Lower values are more deterministic, higher values more creative",
+            )
+            st.session_state.temperature = temp
+
+            # Top P slider
+            top_p = st.slider(
+                "Top P (Nucleus Sampling):",
+                min_value=0.0,
+                max_value=1.0,
+                value=st.session_state.top_p,
+                step=0.05,
+                help="Controls diversity: 1.0 = consider all options, 0.5 = consider only the most likely options",
+            )
+            st.session_state.top_p = top_p
+
+        with col2:
+            # Max tokens slider
+            max_tokens = st.slider(
+                "Maximum Tokens:",
+                min_value=50,
+                max_value=1000,
+                value=st.session_state.max_tokens,
+                step=50,
+                help="Maximum length of the response",
+            )
+            st.session_state.max_tokens = max_tokens
+
+            # Updated model selection with provider groups
+            provider = st.selectbox(
+                "Provider:",
+                ["OpenAI", "Anthropic"],
+                index=0 if "gpt" in st.session_state.model else 1,
+                help="Select the AI provider",
+            )
+
+            if provider == "OpenAI":
+                model = st.selectbox(
+                    "OpenAI Model:",
+                    ["gpt-3.5-turbo", "gpt-4"],
+                    index=0 if st.session_state.model == "gpt-3.5-turbo" else 1,
+                    help="Select which OpenAI model to use",
+                )
+            else:
+                model = st.selectbox(
+                    "Claude Model:",
+                    [
+                        "claude-3-5-sonnet-latest",
+                        "claude-3-haiku-20240307",
+                        "claude-3-opus-latest",
+                    ],
+                    index=0,
+                    help="Select which Anthropic Claude model to use",
+                )
+
+            st.session_state.model = model
+            st.session_state.provider = provider.lower()
+
+            # Add API key settings
+            with st.expander("API Keys", expanded=False):
+                openai_key = st.text_input(
+                    "OpenAI API Key:",
+                    type="password",
+                    value=os.getenv("OPENAI_API_KEY", ""),
+                    help="Your OpenAI API key (stored in session only)",
+                )
+
+                if openai_key:
+                    openai.api_key = openai_key
+                    os.environ["OPENAI_API_KEY"] = openai_key
+
+                anthropic_key = st.text_input(
+                    "Anthropic API Key:",
+                    type="password",
+                    value=os.getenv("ANTHROPIC_API_KEY", ""),
+                    help="Your Anthropic API key (stored in session only)",
+                )
+
+                if anthropic_key:
+                    os.environ["ANTHROPIC_API_KEY"] = anthropic_key
+                    # Reinitialize Anthropic client
+                    try:
+                        global anthropic_client
+                        anthropic_client = anthropic.Anthropic(api_key=anthropic_key)
+                    except Exception as e:
+                        st.error(f"Error initializing Anthropic client: {str(e)}")
+
+        st.divider()
+
+        st.subheader("Try Different Settings")
+        test_prompt = st.text_area(
+            "Test prompt:", "Write a short paragraph about artificial intelligence."
+        )
+
+        if st.button("Test Settings"):
+            messages = [{"role": "user", "content": test_prompt}]
+
+            # Use the session state values
+            response = pe_demo.get_completion(
+                messages,
+                temperature=st.session_state.temperature,
+                max_tokens=st.session_state.max_tokens,
+                top_p=st.session_state.top_p,
+                model=st.session_state.model,
+            )
+
+            st.write("### Response:")
+            st.write(response)
+
+            st.info(f"""
+            This response was generated using:
+            - Provider: {st.session_state.provider.title()}
+            - Model: {st.session_state.model}
+            - Temperature: {st.session_state.temperature}
+            - Top P: {st.session_state.top_p}
+            - Max Tokens: {st.session_state.max_tokens}
+            """)
+
+        # Settings usage reminder
+        st.success("""
+        ✅ Your settings have been saved and will be used for all examples in the workshop.
+        Feel free to return to this page anytime to adjust the parameters.
         """)
 
     elif section == "1. Basic Prompting":
@@ -151,7 +499,13 @@ def main():
         user_prompt = st.text_area("Enter your prompt:", "The sky is")
         if st.button("Generate Response", key="basic"):
             messages = [{"role": "user", "content": user_prompt}]
-            response = pe_demo.get_completion(messages, temperature=0.7)
+            response = pe_demo.get_completion(
+                messages,
+                temperature=st.session_state.temperature,
+                max_tokens=st.session_state.max_tokens,
+                top_p=st.session_state.top_p,
+                model=st.session_state.model,
+            )
             pe_demo.display_result(user_prompt, response, "Basic Prompting")
 
     elif section == "2. Instruction-based Prompting":
@@ -184,7 +538,13 @@ def main():
                 prompt += f"Format: {format_instructions}\n"
 
             messages = [{"role": "user", "content": prompt}]
-            response = pe_demo.get_completion(messages, temperature=0.1)
+            response = pe_demo.get_completion(
+                messages,
+                temperature=st.session_state.temperature,
+                max_tokens=st.session_state.max_tokens,
+                top_p=st.session_state.top_p,
+                model=st.session_state.model,
+            )
             pe_demo.display_result(prompt, response, "Instruction-based Prompting")
 
     elif section == "3. Zero/One/Few-Shot Prompting":
@@ -222,7 +582,13 @@ def main():
 
         if st.button("Generate Response", key="shot"):
             messages = [{"role": "user", "content": prompt}]
-            response = pe_demo.get_completion(messages, temperature=0.1)
+            response = pe_demo.get_completion(
+                messages,
+                temperature=st.session_state.temperature,
+                max_tokens=st.session_state.max_tokens,
+                top_p=st.session_state.top_p,
+                model=st.session_state.model,
+            )
             pe_demo.display_result(prompt, response, f"{shot_type} Prompting")
 
     elif section == "4. Chain-of-Thought Reasoning":
@@ -268,7 +634,13 @@ def main():
         if st.button("Generate Step-by-Step Solution", key="cot"):
             prompt = f"Problem: {problem}\n\nLet's solve this step-by-step:"
             messages = [{"role": "user", "content": prompt}]
-            response = pe_demo.get_completion(messages, temperature=0.3)
+            response = pe_demo.get_completion(
+                messages,
+                temperature=st.session_state.temperature,
+                max_tokens=st.session_state.max_tokens,
+                top_p=st.session_state.top_p,
+                model=st.session_state.model,
+            )
             pe_demo.display_result(prompt, response, "Chain-of-Thought Reasoning")
 
     elif section == "5. Self-Consistency Techniques":
@@ -327,7 +699,13 @@ def main():
             for i in range(num_samples):
                 prompt = f"Problem: {problem}\n\nLet's solve this step-by-step:"
                 messages = [{"role": "user", "content": prompt}]
-                response = pe_demo.get_completion(messages, temperature=0.6)
+                response = pe_demo.get_completion(
+                    messages,
+                    temperature=0.6,  # Use slightly higher temperature for diversity
+                    max_tokens=st.session_state.max_tokens,
+                    top_p=st.session_state.top_p,
+                    model=st.session_state.model,
+                )
                 all_solutions.append(response)
 
                 with st.expander(f"Solution {i + 1}"):
@@ -386,8 +764,8 @@ def main():
 
             # Step 1: Generate initial approaches
             initial_prompt = f"""
-        # Use max_depth in the logic or remove if not needed
-        breadth = st.slider("Number of branches at each point:", 2, 4, 3)
+            Problem: {problem}
+            
             Generate {breadth} different initial approaches or perspectives to solve this problem.
             Each approach should be distinct and creative.
             
@@ -398,7 +776,13 @@ def main():
             """
 
             messages = [{"role": "user", "content": initial_prompt}]
-            initial_response = pe_demo.get_completion(messages, temperature=0.8)
+            initial_response = pe_demo.get_completion(
+                messages,
+                temperature=0.8,
+                max_tokens=st.session_state.max_tokens,
+                top_p=st.session_state.top_p,
+                model=st.session_state.model,
+            )
 
             # Display initial approaches
             st.write("### Initial Approaches:")
@@ -432,7 +816,13 @@ def main():
                 """
 
                 messages = [{"role": "user", "content": expand_prompt}]
-                expanded_response = pe_demo.get_completion(messages, temperature=0.7)
+                expanded_response = pe_demo.get_completion(
+                    messages,
+                    temperature=0.7,
+                    max_tokens=st.session_state.max_tokens,
+                    top_p=st.session_state.top_p,
+                    model=st.session_state.model,
+                )
 
                 st.write("#### Next Steps:")
                 st.write(expanded_response)
@@ -449,7 +839,13 @@ def main():
                 """
 
                 messages = [{"role": "user", "content": final_prompt}]
-                final_solution = pe_demo.get_completion(messages, temperature=0.3)
+                final_solution = pe_demo.get_completion(
+                    messages,
+                    temperature=0.3,
+                    max_tokens=st.session_state.max_tokens,
+                    top_p=st.session_state.top_p,
+                    model=st.session_state.model,
+                )
 
                 st.write(final_solution)
 
@@ -529,7 +925,11 @@ def main():
             # This is a simplified version - in a real implementation, you would
             # actually parse the model's responses and execute real tool calls
             response = pe_demo.get_completion(
-                messages, temperature=0.4, max_tokens=1000
+                messages,
+                temperature=0.4,
+                max_tokens=1000,
+                top_p=st.session_state.top_p,
+                model=st.session_state.model,
             )
 
             # Format the response with highlighting
@@ -578,7 +978,13 @@ def main():
                 Category:"""
 
                 messages = [{"role": "user", "content": category_prompt}]
-                category = pe_demo.get_completion(messages, temperature=0.1)
+                category = pe_demo.get_completion(
+                    messages,
+                    temperature=0.1,
+                    max_tokens=st.session_state.max_tokens,
+                    top_p=st.session_state.top_p,
+                    model=st.session_state.model,
+                )
 
                 st.write(f"**Category:** {category.strip()}")
 
@@ -594,7 +1000,13 @@ def main():
                 Sentiment:"""
 
                 messages = [{"role": "user", "content": sentiment_prompt}]
-                sentiment = pe_demo.get_completion(messages, temperature=0.1)
+                sentiment = pe_demo.get_completion(
+                    messages,
+                    temperature=0.1,
+                    max_tokens=st.session_state.max_tokens,
+                    top_p=st.session_state.top_p,
+                    model=st.session_state.model,
+                )
 
                 st.write(f"**Sentiment:** {sentiment.strip()}")
 
@@ -612,7 +1024,13 @@ def main():
                 """
 
                 messages = [{"role": "user", "content": insights_prompt}]
-                insights = pe_demo.get_completion(messages, temperature=0.3)
+                insights = pe_demo.get_completion(
+                    messages,
+                    temperature=0.3,
+                    max_tokens=st.session_state.max_tokens,
+                    top_p=st.session_state.top_p,
+                    model=st.session_state.model,
+                )
 
                 st.write(insights)
 
@@ -645,7 +1063,13 @@ def main():
                 Classification:"""
 
                 messages = [{"role": "user", "content": classification_prompt}]
-                classification = pe_demo.get_completion(messages, temperature=0.2)
+                classification = pe_demo.get_completion(
+                    messages,
+                    temperature=0.2,
+                    max_tokens=st.session_state.max_tokens,
+                    top_p=st.session_state.top_p,
+                    model=st.session_state.model,
+                )
 
                 st.write("**Problem Classification:**")
                 st.write(classification)
@@ -686,7 +1110,13 @@ def main():
                     """
 
                 messages = [{"role": "user", "content": solution_prompt}]
-                solution = pe_demo.get_completion(messages, temperature=0.4)
+                solution = pe_demo.get_completion(
+                    messages,
+                    temperature=0.4,
+                    max_tokens=st.session_state.max_tokens,
+                    top_p=st.session_state.top_p,
+                    model=st.session_state.model,
+                )
 
                 st.write("**Solution Analysis:**")
                 st.write(solution)
@@ -708,7 +1138,13 @@ def main():
 
                 basic_prompt = f"Problem: {comparison_problem}\nSolution:"
                 messages = [{"role": "user", "content": basic_prompt}]
-                basic_result = pe_demo.get_completion(messages, temperature=0.3)
+                basic_result = pe_demo.get_completion(
+                    messages,
+                    temperature=0.3,
+                    max_tokens=st.session_state.max_tokens,
+                    top_p=st.session_state.top_p,
+                    model=st.session_state.model,
+                )
 
                 with st.expander("Basic Prompting Result", expanded=False):
                     st.write(basic_result)
@@ -718,7 +1154,13 @@ def main():
 
                 instruction_prompt = f"Task: Analyze and solve: {comparison_problem}\nFormat: Provide a structured solution with steps and reasoning."
                 messages = [{"role": "user", "content": instruction_prompt}]
-                instruction_result = pe_demo.get_completion(messages, temperature=0.3)
+                instruction_result = pe_demo.get_completion(
+                    messages,
+                    temperature=0.3,
+                    max_tokens=st.session_state.max_tokens,
+                    top_p=st.session_state.top_p,
+                    model=st.session_state.model,
+                )
 
                 with st.expander("Instruction-based Result", expanded=False):
                     st.write(instruction_result)
@@ -730,7 +1172,13 @@ def main():
                     f"Problem: {comparison_problem}\n\nLet's solve this step-by-step:"
                 )
                 messages = [{"role": "user", "content": cot_prompt}]
-                cot_result = pe_demo.get_completion(messages, temperature=0.3)
+                cot_result = pe_demo.get_completion(
+                    messages,
+                    temperature=0.3,
+                    max_tokens=st.session_state.max_tokens,
+                    top_p=st.session_state.top_p,
+                    model=st.session_state.model,
+                )
 
                 with st.expander("Chain-of-Thought Result", expanded=False):
                     st.write(cot_result)
@@ -754,11 +1202,15 @@ def main():
                 """
 
                 messages = [{"role": "user", "content": comparison_prompt}]
-                comparison_result = pe_demo.get_completion(messages, temperature=0.3)
+                comparison_result = pe_demo.get_completion(
+                    messages,
+                    temperature=0.3,
+                    max_tokens=st.session_state.max_tokens,
+                    top_p=st.session_state.top_p,
+                    model=st.session_state.model,
+                )
 
                 st.write(comparison_result)
-
-                # Call the main function to run the app
 
 
 if __name__ == "__main__":

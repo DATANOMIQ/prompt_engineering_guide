@@ -55,7 +55,7 @@ class PromptEngineeringTutorial:
         """Run the complete workshop from the main file"""
         try:
             # Import the workshop runner
-            from prompt_engineering_workshop import run_workshop
+            from modules.prompt_engineering_workshop import run_workshop
 
             run_workshop()
         except ImportError:
