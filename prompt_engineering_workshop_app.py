@@ -127,37 +127,47 @@ def main():
         layout="wide",
         initial_sidebar_state="expanded",
     )
-
     # Add custom CSS to increase font size and sidebar width
     st.markdown(
         """
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+    
     html, body, [class*="css"] {
+        font-family: 'Space Mono', monospace;
         font-size: 22px;
     }
     h1 {
+        font-family: 'Space Mono', monospace;
         font-size: 2.5rem !important;
     }
     h2 {
+        font-family: 'Space Mono', monospace;
         font-size: 2rem !important;
     }
     h3 {
+        font-family: 'Space Mono', monospace;
         font-size: 1.5rem !important;
     }
     .stTextArea textarea {
+        font-family: 'Space Mono', monospace;
         font-size: 20px !important;
         min-height: 400px !important;
     }
     .stButton button {
+        font-family: 'Space Mono', monospace;
         font-size: 22px !important;
     }
     .stRadio label {
+        font-family: 'Space Mono', monospace;
         font-size: 22px !important;
     }
     .stSelectbox label {
+        font-family: 'Space Mono', monospace;
         font-size: 22px !important;
     }
     .sidebar .sidebar-content {
+        font-family: 'Space Mono', monospace;
         font-size: 22px !important;
     }
     /* Make sliders wider */
@@ -169,6 +179,7 @@ def main():
     }
     /* Make sidebar wider */
     [data-testid="stSidebar"] {
+        font-family: 'Space Mono', monospace;
         min-width: 400px !important;
         max-width: 400px !important;
     }
@@ -322,7 +333,7 @@ def main():
         Changes made here will affect all examples throughout the workshop.
         """)
 
-        with st.expander("Understanding Model Parameters", expanded=True):
+        with st.expander("Understanding Model Parameters", expanded=False):
             st.write("""
             ### Temperature
             
@@ -510,7 +521,7 @@ def main():
             "Simple text completions that demonstrate how models respond to basic prompts."
         )
 
-        with st.expander("About Basic Prompting", expanded=True):
+        with st.expander("About Basic Prompting", expanded=False):
             st.write("""
             ### Basic Prompting
             
@@ -545,24 +556,77 @@ def main():
             - Start with clear context if needed
             """)
 
-        st.subheader("Try it yourself:")
-        user_prompt = st.text_area("Enter your prompt:", "The sky is")
-        if st.button("Generate Response", key="basic"):
-            messages = [{"role": "user", "content": user_prompt}]
-            response = pe_demo.get_completion(
-                messages,
-                temperature=st.session_state.temperature,
-                max_tokens=st.session_state.max_tokens,
-                top_p=st.session_state.top_p,
-                model=st.session_state.model,
-            )
-            pe_demo.display_result(user_prompt, response, "Basic Prompting")
+        # Initialize chat history in session state if it doesn't exist
+        if "chat_history" not in st.session_state:
+            st.session_state.chat_history = []
+
+        # Add a key for managing input field resets
+        if "input_key" not in st.session_state:
+            st.session_state.input_key = 0
+
+        st.subheader("Try it yourself - Conversational Mode:")
+
+        # Display previous chat messages
+        chat_container = st.container()
+        with chat_container:
+            for i, message in enumerate(st.session_state.chat_history):
+                if message["role"] == "user":
+                    st.markdown(f"**You:** {message['content']}")
+                else:
+                    st.markdown(f"**AI:** {message['content']}")
+
+                # Add a small divider between messages except the last one
+                if i < len(st.session_state.chat_history) - 1:
+                    st.markdown("---")
+
+        # Input for new message - using a unique key that changes when we want to clear the field
+        current_input_key = f"user_message_{st.session_state.input_key}"
+        user_message = st.text_area("Your message:", key=current_input_key, height=100)
+
+        col1, col2 = st.columns([1, 5])
+        with col1:
+            if st.button("Send", key="send_message"):
+                if user_message:
+                    # Add user message to chat history
+                    st.session_state.chat_history.append(
+                        {"role": "user", "content": user_message}
+                    )
+
+                    # Get AI response
+                    messages = [
+                        {"role": msg["role"], "content": msg["content"]}
+                        for msg in st.session_state.chat_history
+                    ]
+
+                    response = pe_demo.get_completion(
+                        messages,
+                        temperature=st.session_state.temperature,
+                        max_tokens=st.session_state.max_tokens,
+                        top_p=st.session_state.top_p,
+                        model=st.session_state.model,
+                    )
+
+                    # Add AI response to chat history
+                    st.session_state.chat_history.append(
+                        {"role": "assistant", "content": response}
+                    )
+
+                    # Increment the input key to create a fresh text area (clearing the previous input)
+                    st.session_state.input_key += 1
+
+                    # Rerun to update the display with the new messages
+                    st.rerun()
+
+        with col2:
+            if st.button("Clear Chat", key="clear_chat"):
+                st.session_state.chat_history = []
+                st.rerun()
 
     elif section == "2. Instruction-based Prompting":
         st.write("## Instruction-based Prompting")
         st.write("Provide clear instructions to guide the AI's response.")
 
-        with st.expander("About Instruction Prompting", expanded=True):
+        with st.expander("About Instruction Prompting", expanded=False):
             st.write("""
             ### Instruction-based Prompting
             
@@ -637,7 +701,7 @@ def main():
 
         shot_type = st.radio("Select shot type:", ["Zero-shot", "One-shot", "Few-shot"])
 
-        with st.expander("About Shot-based Prompting", expanded=True):
+        with st.expander("About Shot-based Prompting", expanded=False):
             st.write("""
             ### Shot-based Prompting Techniques
             
@@ -729,7 +793,7 @@ def main():
         st.write("## Chain-of-Thought Reasoning")
         st.write("Guide the model to break down complex problems into logical steps.")
 
-        with st.expander("About Chain-of-Thought Reasoning", expanded=True):
+        with st.expander("About Chain-of-Thought Reasoning", expanded=False):
             st.write("""
             ### Chain-of-Thought (CoT) Reasoning
             
@@ -829,7 +893,7 @@ def main():
         st.write("## Self-Consistency Techniques")
         st.write("Generate multiple solution paths and find consensus among them.")
 
-        with st.expander("About Self-Consistency", expanded=True):
+        with st.expander("About Self-Consistency", expanded=False):
             st.write("""
             ### Self-Consistency Techniques
             
@@ -941,7 +1005,7 @@ def main():
             "Explore multiple solution paths systematically by creating a tree of possibilities."
         )
 
-        with st.expander("About Tree of Thoughts", expanded=True):
+        with st.expander("About Tree of Thoughts", expanded=False):
             st.write("""
             ### Tree of Thoughts (ToT)
             
@@ -1116,7 +1180,7 @@ def main():
             "Combining reasoning and acting to solve problems by interacting with tools."
         )
 
-        with st.expander("About ReAct", expanded=True):
+        with st.expander("About ReAct", expanded=False):
             st.write("""
             ### ReAct Framework (Reasoning + Acting)
             
