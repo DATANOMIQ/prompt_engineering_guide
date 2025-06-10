@@ -4,6 +4,7 @@ import sys
 import openai
 import anthropic
 import streamlit as st
+import base64
 
 # Add project root to path for module imports
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -26,6 +27,16 @@ if "openai_api_key" not in st.session_state:
     st.session_state.openai_api_key = os.getenv("OPENAI_API_KEY", "")
 if "anthropic_api_key" not in st.session_state:
     st.session_state.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY", "")
+
+
+def get_image_base64(image_path):
+    """Convert image to base64 string for embedding in HTML"""
+    try:
+        with open(image_path, "rb") as image_file:
+            return base64.b64encode(image_file.read()).decode()
+    except Exception as e:
+        print(f"Error converting image to base64: {e}")
+        return None
 
 
 class StreamlitPromptEngineering:
@@ -219,7 +230,7 @@ def main():
         st.subheader("@AI Convention 2025 (IHK Schwaben)")
 
     with col2:
-        # Display the IHK Schwaben logo flush right
+        # Display the DATANOMIQ logo flush right and make it clickable
         try:
             # Apply CSS for right alignment
             st.markdown(
@@ -237,10 +248,48 @@ def main():
             logo_path = os.path.join(os.getcwd(), "assets", "DATANOMIQ.png")
 
             if os.path.exists(logo_path):
-                st.image(logo_path, width=300)
+                # Create clickable logo using HTML
+                image_base64 = get_image_base64(logo_path)
+                if image_base64:
+                    st.markdown(
+                        f"""
+                        <div style="display: flex; justify-content: flex-end;">
+                            <a href="https://datanomiq.ai" target="_blank" style="text-decoration: none;">
+                                <img src="data:image/png;base64,{image_base64}" 
+                                     width="300" 
+                                     style="cursor: pointer;" 
+                                     title="Visit DATANOMIQ.ai">
+                            </a>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+                else:
+                    # Fallback to text link if base64 conversion fails
+                    st.markdown(
+                        """
+                        <div style="display: flex; justify-content: flex-end;">
+                            <a href="https://datanomiq.ai" target="_blank" style="text-decoration: none; color: #0066cc; font-weight: bold;">
+                                DATANOMIQ.ai
+                            </a>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
 
         except Exception as e:
             st.error(f"Could not load logo: {e}")
+            # Fallback to text link
+            st.markdown(
+                """
+                <div style="display: flex; justify-content: flex-end;">
+                    <a href="https://datanomiq.ai" target="_blank" style="text-decoration: none; color: #0066cc; font-weight: bold;">
+                        DATANOMIQ.ai
+                    </a>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
     # Initialize frontend prompt engineering instance
     pe_demo = StreamlitPromptEngineering()

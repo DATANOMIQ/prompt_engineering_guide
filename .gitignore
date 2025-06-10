@@ -2,7 +2,6 @@
 *.csv
 *.xlsx
 *.jpg
-*.png
 
 # remove all the example spam mails
 notebooks/week3/3_Basics_KNN/datasets/
