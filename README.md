@@ -55,6 +55,8 @@ There are two ways to set up the Prompt Engineering Workshop:
 ```bash
 git clone https://github.com/alexanderlammers/prompt_engineering_guide.git
 cd prompt_engineering_guide
+python -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -86,6 +88,7 @@ streamlit run prompt_engineering_workshop_app.py
 ```
 
 This opens a web interface where you can:
+
 - Experiment with different prompting techniques
 - Adjust model parameters in real-time
 - See immediate results from AI models
@@ -148,6 +151,7 @@ print(result)
 ## 🎯 Workshop Techniques
 
 ### 1. Basic Prompting
+
 Simple, natural language inputs that leverage the model's pretrained knowledge.
 
 ```python
@@ -155,6 +159,7 @@ prompt = "Explain quantum computing in simple terms"
 ```
 
 ### 2. Instruction-based Prompting
+
 Explicit task directions with format specifications.
 
 ```python
@@ -166,6 +171,7 @@ Format: Output only the classification.
 ```
 
 ### 3. Few-Shot Learning
+
 Learning from examples with varying amounts of context.
 
 ```python
@@ -180,6 +186,7 @@ Text: "This workshop exceeded my expectations!" →
 ```
 
 ### 4. Chain-of-Thought Reasoning
+
 Step-by-step problem solving with explicit reasoning.
 
 ```python
@@ -192,6 +199,7 @@ Let's solve this step-by-step:
 ```
 
 ### 5. Self-Consistency
+
 Multiple solution paths with consensus voting.
 
 ```python
@@ -205,6 +213,7 @@ consensus = find_consensus(solutions)
 ```
 
 ### 6. Tree of Thoughts
+
 Systematic exploration of multiple solution branches.
 
 ```python
@@ -215,6 +224,7 @@ result = tot.solve_with_tree_of_thoughts(complex_problem)
 ```
 
 ### 7. ReAct Framework
+
 Reasoning combined with external tool interaction.
 
 ```python
@@ -245,6 +255,7 @@ The Streamlit application provides:
 The workshop includes comprehensive examples:
 
 ### Notebooks Structure
+
 ```
 notebooks/
 ├── 0_Environmental_Setup.ipynb
@@ -259,6 +270,7 @@ notebooks/
 ```
 
 ### Code Modules
+
 ```
 modules/
 ├── basic_prompting.py

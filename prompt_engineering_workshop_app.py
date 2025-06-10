@@ -219,7 +219,7 @@ def main():
                 """,
                 unsafe_allow_html=True,
             )
-            st.image("Assets/DATANOMIQ.png", width=300)
+            st.image("assets/DATANOMIQ.png", width=300)
         except Exception as e:
             st.error(f"Could not load logo: {e}")
 
