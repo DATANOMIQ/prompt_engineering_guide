@@ -21,6 +21,12 @@ if anthropic_api_key:
     except Exception as e:
         print(f"Error initializing Anthropic client: {str(e)}")
 
+# Initialize session state for API keys
+if "openai_api_key" not in st.session_state:
+    st.session_state.openai_api_key = os.getenv("OPENAI_API_KEY", "")
+if "anthropic_api_key" not in st.session_state:
+    st.session_state.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY", "")
+
 
 class StreamlitPromptEngineering:
     """Frontend version of PromptEngineering class adapted for Streamlit"""
@@ -60,16 +66,19 @@ class StreamlitPromptEngineering:
         params = self.set_parameters(**kwargs)
         provider = "anthropic" if "claude" in params["model"] else "openai"
 
-        # Validate required API keys
-        if provider == "openai" and not openai.api_key:
+        # Validate required API keys using session state
+        if provider == "openai" and not st.session_state.openai_api_key:
             return f"[OpenAI API key not set. Example response for: {messages[-1]['content'][:50]}...]"
-        if provider == "anthropic" and not anthropic_client:
+        if provider == "anthropic" and not st.session_state.anthropic_api_key:
             return f"[Anthropic API key not set. Example response for: {messages[-1]['content'][:50]}...]"
 
         try:
             with st.spinner("Getting AI response..."):
                 if provider == "openai":
-                    # Use OpenAI API
+                    # Use OpenAI API with session state key
+                    # Set the API key on the client
+                    openai.api_key = st.session_state.openai_api_key
+
                     response = openai.chat.completions.create(
                         model=params["model"],
                         messages=messages,
@@ -81,7 +90,7 @@ class StreamlitPromptEngineering:
                     )
                     return response.choices[0].message.content
                 else:
-                    # Use Anthropic API
+                    # Use Anthropic API with session state key
                     system_message = ""
                     user_messages = []
 
@@ -95,7 +104,12 @@ class StreamlitPromptEngineering:
                     # Join user messages if multiple (simplification for demo)
                     user_content = "\n".join(user_messages) if user_messages else ""
 
-                    response = anthropic_client.messages.create(
+                    # Create temporary client with session state key
+                    temp_anthropic_client = anthropic.Anthropic(
+                        api_key=st.session_state.anthropic_api_key
+                    )
+
+                    response = temp_anthropic_client.messages.create(
                         model=params["model"],
                         max_tokens=params["max_tokens"],
                         temperature=params["temperature"],
@@ -456,32 +470,40 @@ def main():
 
             # Add API key settings
             with st.expander("API Keys", expanded=False):
+                st.info(
+                    "⚠️ **Security Note**: API keys are only stored for your current session and will be cleared when you close the browser or refresh the page."
+                )
+
                 openai_key = st.text_input(
                     "OpenAI API Key:",
                     type="password",
-                    value=os.getenv("OPENAI_API_KEY", ""),
+                    value=st.session_state.openai_api_key,
                     help="Your OpenAI API key (stored in session only)",
                 )
 
                 if openai_key:
-                    openai.api_key = openai_key
-                    os.environ["OPENAI_API_KEY"] = openai_key
+                    st.session_state.openai_api_key = openai_key
 
                 anthropic_key = st.text_input(
                     "Anthropic API Key:",
                     type="password",
-                    value=os.getenv("ANTHROPIC_API_KEY", ""),
+                    value=st.session_state.anthropic_api_key,
                     help="Your Anthropic API key (stored in session only)",
                 )
 
                 if anthropic_key:
-                    os.environ["ANTHROPIC_API_KEY"] = anthropic_key
-                    # Reinitialize Anthropic client
-                    try:
-                        global anthropic_client
-                        anthropic_client = anthropic.Anthropic(api_key=anthropic_key)
-                    except Exception as e:
-                        st.error(f"Error initializing Anthropic client: {str(e)}")
+                    st.session_state.anthropic_api_key = anthropic_key
+
+                # Add clear keys button
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("Clear OpenAI Key"):
+                        st.session_state.openai_api_key = ""
+                        st.rerun()
+                with col2:
+                    if st.button("Clear Anthropic Key"):
+                        st.session_state.anthropic_api_key = ""
+                        st.rerun()
 
         st.divider()
 
