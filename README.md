@@ -5,17 +5,15 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/alexanderlammers/prompt_engineering_guide/blob/master/LICENSE)
 [![Workshop](https://img.shields.io/badge/workshop-AI%20Convention%202025-green.svg)](https://ihk-schwaben.de)
 
-A comprehensive interactive workshop for learning prompt engineering techniques with AI language models. This package provides practical examples, hands-on exercises, and real-world applications of advanced prompting strategies.
+A comprehensive interactive workshop for learning prompt engineering techniques with AI language models. This repo contains materials from our Prompt Engineering workshop @ AI Convention 2025 ([IHK Schwaben](https://www.ihk.de/schwaben/)) including practical examples, hands-on exercises, and real-world applications of advanced prompting strategies.
 
-<p align="center">
-  <img src="https://img.shields.io/badge/techniques-8+-brightgreen.svg" alt="8+ Techniques" />
-  <img src="https://img.shields.io/badge/examples-50+-orange.svg" alt="50+ Examples" />
-  <img src="https://img.shields.io/badge/interactive-yes-blue.svg" alt="Interactive" />
-</p>
+We also provide the complete presentation materials here:
+
+📄 **[Download Workshop Presentation PDF](assets/250521_IHK_Prompt_Engineering.pdf)**
 
 This workshop covers essential prompt engineering techniques from basic prompting to advanced frameworks like ReAct and Tree of Thoughts. An interactive Streamlit application provides hands-on experience with real AI models, while comprehensive Jupyter notebooks offer detailed explanations and examples.
 
-Following details the functionality provided by the workshop:
+The following details the functionality provided by the workshop:
 
 - **8 Core Techniques**: From basic prompting to advanced reasoning frameworks
   - Basic Prompting - Simple text completions and natural language interactions
