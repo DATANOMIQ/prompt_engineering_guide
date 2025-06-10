@@ -2,16 +2,16 @@
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Streamlit](https://img.shields.io/badge/built%20with-Streamlit-FF4B4B.svg)](https://streamlit.io/)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/alexanderlammers/prompt_engineering_guide/blob/master/LICENSE)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/DATANOMIQ/prompt_engineering_guide/blob/main/LICENSE)
 [![Workshop](https://img.shields.io/badge/workshop-AI%20Convention%202025-green.svg)](https://ihk-schwaben.de)
 
-A comprehensive interactive workshop for learning prompt engineering techniques with AI language models. This repo contains materials from our Prompt Engineering workshop @ AI Convention 2025 ([IHK Schwaben](https://www.ihk.de/schwaben/)) including practical examples, hands-on exercises, and real-world applications of advanced prompting strategies.
+A comprehensive interactive workshop for learning prompt engineering techniques with large language models (LLMs). This repo contains materials from our Prompt Engineering workshop @ AI Convention 2025 (IHK Schwaben) including practical examples, hands-on exercises, and real-world applications of advanced prompting strategies.
 
 We also provide the complete presentation materials here:
 
 📄 **[Download Workshop Presentation PDF](assets/250521_IHK_Prompt_Engineering.pdf)**
 
-This workshop covers essential prompt engineering techniques from basic prompting to advanced frameworks like ReAct and Tree of Thoughts. An interactive Streamlit application provides hands-on experience with real AI models, while comprehensive Jupyter notebooks offer detailed explanations and examples.
+This workshop covers essential prompt engineering techniques from basic prompting to advanced frameworks like ReAct and Tree of Thoughts. An interactive Streamlit application provides hands-on experience with real LLMs models, while comprehensive Jupyter notebooks offer detailed explanations and examples.
 
 The following details the functionality provided by the workshop:
 
@@ -38,10 +38,8 @@ It is distributed under the Apache 2.0 license.
 - Installation
 - Quick Start
 - Workshop Techniques
-- Interactive Application
-- Examples
 - Configuration
-- Contributing
+- Contribute
 - License
 
 ## ⚙️ Installation
@@ -89,7 +87,7 @@ This opens a web interface where you can:
 
 - Experiment with different prompting techniques
 - Adjust model parameters in real-time
-- See immediate results from AI models
+- See immediate results from LLM models
 - Follow guided tutorials for each technique
 
 ### Jupyter Notebooks
@@ -230,62 +228,11 @@ Reasoning combined with external tool interaction.
 # Thought → Action → Observation → Thought → ...
 ```
 
-## 🖥️ Interactive Application
-
-The Streamlit application provides:
-
-- **Real-time Experimentation**: Adjust parameters and see immediate results
-- **Model Comparison**: Test different AI models (GPT-3.5, GPT-4, Claude)
-- **Parameter Tuning**: Control temperature, top-p, max tokens
-- **Guided Examples**: Step-by-step tutorials for each technique
-- **Performance Insights**: Compare effectiveness across techniques
-
-### Key Features
-
-- **8 Interactive Sections**: One for each major technique
-- **Model Flexibility**: Switch between OpenAI and Anthropic models
-- **Parameter Control**: Fine-tune model behavior
-- **Real-time Results**: See outputs as you experiment
-- **Educational Content**: Built-in explanations and best practices
-
-## 📚 Examples
-
-The workshop includes comprehensive examples:
-
-### Notebooks Structure
-
-```
-notebooks/
-├── 0_Environmental_Setup.ipynb
-├── 1_basic_prompting.ipynb
-├── 2_instruction_prompting.ipynb
-├── 3_zero_one_fewshot_prompting.ipynb
-├── 4_chain_of_thought_reasoning_prompting.ipynb
-├── 5_self_consistency_advanced_prompting.ipynb
-├── 6_tree_of_thought_prompting.ipynb
-├── 7_reason_and_act(ReAct).ipynb
-└── 8_advanced_application_integration.ipynb
-```
-
-### Code Modules
-
-```
-modules/
-├── basic_prompting.py
-├── instruction_prompting.py
-├── shot_prompting.py
-├── chain_of_thought.py
-├── self_consistency.py
-├── tree_of_thoughts.py
-├── react_framework.py
-└── applications.py
-```
-
 ## ⚙️ Configuration
 
 ### Model Parameters
 
-Control AI model behavior through various parameters:
+Control the LLM model behavior through various parameters:
 
 ```python
 # Temperature: Controls randomness (0.0 = deterministic, 1.0 = creative)
@@ -301,30 +248,6 @@ max_tokens = 500
 model = "gpt-4"  # or "gpt-3.5-turbo", "claude-3-sonnet", etc.
 ```
 
-### Environment Variables
-
-Set up your API keys in `.env`:
-
-```env
-# OpenAI Configuration
-OPENAI_API_KEY=sk-your-openai-key-here
-
-# Anthropic Configuration  
-ANTHROPIC_API_KEY=sk-ant-your-anthropic-key-here
-```
-
-## 🎓 Educational Approach
-
-This workshop follows a progressive learning structure:
-
-1. **Foundational Concepts**: Basic prompting and instruction-following
-2. **Example-Based Learning**: Zero, one, and few-shot techniques
-3. **Advanced Reasoning**: Chain-of-thought and self-consistency
-4. **Complex Problem Solving**: Tree of thoughts and ReAct frameworks
-5. **Real-World Applications**: Practical implementations and use cases
-
-Each technique builds upon previous concepts, providing a comprehensive understanding of prompt engineering principles.
-
 ## 🤝 Contribute
 
 We welcome contributions to improve the workshop:
@@ -335,15 +258,6 @@ We welcome contributions to improve the workshop:
 - **New Techniques**: Add emerging prompting strategies
 
 See the contribution guidelines for more details.
-
-## 📝 Workshop Materials
-
-This workshop is based on the IHK Presentation: "Prompt Engineering: The Art of Communicating with AI" and includes:
-
-- **Theoretical Foundation**: Academic research and best practices
-- **Practical Implementation**: Hands-on coding examples
-- **Interactive Learning**: Web-based experimentation platform
-- **Real-World Applications**: Industry-relevant use cases
 
 ## 🏗 Maintainers
 
