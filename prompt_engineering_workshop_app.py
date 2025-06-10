@@ -1,9 +1,9 @@
-import streamlit as st
 import os
 from dotenv import load_dotenv
 import sys
 import openai
 import anthropic
+import streamlit as st
 
 # Add project root to path for module imports
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -219,7 +219,12 @@ def main():
                 """,
                 unsafe_allow_html=True,
             )
-            st.image("assets/DATANOMIQ.png", width=300)
+
+            logo_path = os.path.join(os.getcwd(), "assets", "DATANOMIQ.png")
+
+            if os.path.exists(logo_path):
+                st.image(logo_path, width=300)
+
         except Exception as e:
             st.error(f"Could not load logo: {e}")
 

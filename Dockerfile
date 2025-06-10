@@ -19,6 +19,11 @@ COPY . .
 
 # Create non-root user for security
 RUN useradd -m -u 1000 streamlit && chown -R streamlit:streamlit /app
+
+# Ensure assets directory and files have proper permissions
+RUN chmod -R 755 /app/assets && \
+    chown -R streamlit:streamlit /app/assets
+
 USER streamlit
 
 # Expose port
